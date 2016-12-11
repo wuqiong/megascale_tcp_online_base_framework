@@ -20,6 +20,7 @@
 #include <resolv.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#ifdef __linux__
 #include <sys/times.h>
 #include <sys/timex.h>	//	for ntpc
 #include <sys/mman.h>
@@ -36,6 +37,7 @@
 #include <linux/wireless.h>
 #include <net/if_arp.h>
 #include <sys/soundcard.h>
+#endif
 
 void os_thread_sleep(unsigned int tm);
 void trim(char ** s);

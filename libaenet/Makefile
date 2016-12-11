@@ -1,16 +1,22 @@
 include ../config.mk
 include ../server.mk
 
+
+SRC = ae.c anet.c
+OBJ = ${SRC:.c=.o}
+CFLAGS = -Wno-parentheses -Wno-switch-enum -Wno-unused-value
+
 TARGET = libae_net.a
 
-all : ae.o net.o #zmalloc.o
-
-	$(AR) -r $(TARGET) *.o
+all: $(OBJ)
+	$(AR) -rc $(TARGET) $(OBJ)
 	cp $(TARGET) $(MYLIB)
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) -o $@ $<
+	$(CC) -c $(CFLAGS) $< -o $@
 
-clean :
-	/bin/rm -f *.o
-	/bin/rm -f $(TARGET)
+
+clean:
+	rm -f $(OBJ) libae_net.a
+
+.PHONY: clean

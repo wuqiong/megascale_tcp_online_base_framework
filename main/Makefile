@@ -8,8 +8,6 @@
 #	
 ##################################
 #-------------------------------------------------
-include ../config.mk
-include ../server.mk
 
 EXTRALIB += -lae_stl -lae_pthread -lae_net -lae_log -lae_protocol -lae_utility
 EXTRALIB += -lpthread#-ldl -lm -lc 

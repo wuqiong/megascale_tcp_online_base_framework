@@ -14,7 +14,16 @@
 
 #include "util.h"
 #include "sha1.h"
+
+#ifdef __linux__
 #include <linux/tcp.h>
+#endif
+
+#ifdef __APPLE__
+#include <AvailabilityMacros.h>
+#include <netinet/tcp.h>
+#endif
+
 
 void print_buf(char *buf, int len)
 {

@@ -28,6 +28,7 @@ extern "C"{
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/times.h>
+#ifdef __linux__
 #include <sys/timex.h>	//	for ntpc
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -45,6 +46,8 @@ extern "C"{
 #include <sys/soundcard.h>
 
 #include <linux/tcp.h>
+#endif
+
 #include "tcp_lib_types.h"
 
 #define MIN_PRIORITY 0

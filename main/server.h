@@ -1,10 +1,10 @@
 /*
- All source file must include this head file
- 
- Authors: ZhangXuelian
+   All source file must include this head file
 
- Changes:
- 	
+Authors: ZhangXuelian
+
+Changes:
+
  */
 
 #ifndef __SERVER_H__
@@ -44,11 +44,10 @@
 #include <sys/stat.h>
 
 #include "../libaenet/ae.h" 
-#include "../libaenet/net.h"
+#include "../libaenet/anet.h"
 #include "../libstl/libstl.h"
 #include "../libutility/libutility.h"
 #include "../liblog/liblog.h"
-#include "../libcrypt/libcrypt.h"
 #include "../libuuid/libc_uuid/get_uuid.h"
 #include "../libpthread/libpthread.h"
 #include "../libprotocol/protocol.h"
@@ -101,7 +100,7 @@ typedef struct __tag_client_handler
 	void (* disconnect)(void * client);
 	void (* check_timeout)(void * client);
 	bool (* parse_recved_data)(void * client);
-	void * sub_client_handler; // ÓÃÓÚ²»Í¬ÀàĞÍµÄclient handlerµÄË½ÓĞÒµÎñ½âÎö¡£
+	void * sub_client_handler; // ç”¨äºä¸åŒç±»å‹çš„client handlerçš„ç§æœ‰ä¸šåŠ¡è§£æã€‚
 } CLIENT_HANDLER;
 
 typedef struct __tag_client_handler_list
@@ -112,21 +111,21 @@ typedef struct __tag_client_handler_list
 }CLIENT_HANDLER_LIST;
 
 typedef struct __tag_client {
-    uint64_t id;            
-    sds peerid;             
+	uint64_t id;            
+	sds peerid;             
 	int fd;
 
 	sds querybuf;           
 	size_t client_max_querybuf_len; 
 	size_t querybuf_peak;   
 
-    int reqtype;
+	int reqtype;
 	int flags;
 
-    time_t ctime;           
-    time_t lastinteraction; 
+	time_t ctime;           
+	time_t lastinteraction; 
 
-    int authenticated;     
+	int authenticated;     
 
 	int bufpos;
 	char buf[PROTO_REPLY_CHUNK_BYTES];
@@ -134,13 +133,13 @@ typedef struct __tag_client {
 	unsigned long long reply_bytes;
 	size_t sentlen;
 
-	CLIENT_HANDLER * client_handler; // ´´½¨ClientÊµÀıÊ±£¬¸øËü¸³Öµ
+	CLIENT_HANDLER * client_handler; // åˆ›å»ºClientå®ä¾‹æ—¶ï¼Œç»™å®ƒèµ‹å€¼
 } CLIENT;
 
 
 typedef struct __tag_Server_Context 
 {
-    struct {
+	struct {
 		pid_t pid; 
 		char * configfile; 
 		int activerehashing;
@@ -153,8 +152,8 @@ typedef struct __tag_Server_Context
 		list * client_handler;
 	} common;
 
-    struct {
-		AE_EVENT_LOOP * el;
+	struct {
+		aeEventLoop * el;
 		int fd;
 		int port; 
 		int tcp_backlog; 
@@ -172,15 +171,15 @@ typedef struct __tag_Server_Context
 		list * clients_pending_write;
 		CLIENT * current_client; 
 		int clients_paused; 
-		char neterr[AE_NET_ERR_LEN];
+		char neterr[ANET_ERR_LEN];
 		dict * migrate_cached_sockets;
 		//uint64_t next_client_id; 
 		int protected_mode; 
 		long long stat_numconnections;
 		long long stat_rejected_conn; 
 	} net;
-	
-	#define NUM_OPTIONS 20
+
+#define NUM_OPTIONS 20
 	char * config_ex[NUM_OPTIONS];    // server configuration parameters
 	struct {
 		int maxidletime;              
@@ -190,25 +189,25 @@ typedef struct __tag_Server_Context
 		int supervised_mode;           
 		int daemonize;                 
 	} config;
-	
-    struct {
+
+	struct {
 		int state;  
 		char * logfile;
 		int verbosity;  
-        int syslog_enabled;
-        int bug_report_start; 
+		int syslog_enabled;
+		int bug_report_start; 
 		long long stat_net_input_bytes; 
 		long long stat_net_output_bytes;
 	}log;
-	
-    unsigned int maxclients;     
-    unsigned long long maxmemory;
-    int maxmemory_policy;        
-    int maxmemory_samples;       
 
-    time_t unixtime;        
-    long long mstime;       
-    unsigned lruclock:LRU_BITS; 
+	unsigned int maxclients;     
+	unsigned long long maxmemory;
+	int maxmemory_policy;        
+	int maxmemory_samples;       
+
+	time_t unixtime;        
+	long long mstime;       
+	unsigned lruclock:LRU_BITS; 
 
 	struct {
 		//lua_State *lua; 
@@ -227,7 +226,7 @@ int do_element_exist(dict * d, void * key);
 dictEntry * get_random_element(dict * db);
 
 // server_scron.c
-int server_cron(struct AE_EVENT_LOOP * event_loop, long long id, void * client_data);
+int server_cron(struct aeEventLoop * event_loop, long long id, void * client_data);
 void clients_cron(void);
 void update_cached_time(void);
 
@@ -235,7 +234,7 @@ void update_cached_time(void);
 CLIENT * create_client(int fd);
 void free_client_async(CLIENT *c);
 void free_client(CLIENT *c);
-void send_reply_to_client(AE_EVENT_LOOP * el, int fd, void * privdata, int mask);
+void send_reply_to_client(aeEventLoop * el, int fd, void * privdata, int mask);
 
 // option.c
 #define MAX_OPTIONS 40

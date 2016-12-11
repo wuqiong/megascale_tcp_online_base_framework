@@ -14,8 +14,8 @@
 extern "C"{
 #endif
 
-// ĞèÒª´¦ÀíµÄË½ÓĞĞ­Òé£¬¼ÓÔÚÕâÀï¡£
-// 1¡¢ÒªÖ§³ÖµÄË½ÓĞĞ­ÒéµÄ¿Í»§¶ËÀàĞÍ
+// éœ€è¦å¤„ç†çš„ç§æœ‰åè®®ï¼ŒåŠ åœ¨è¿™é‡Œã€‚
+// 1ã€è¦æ”¯æŒçš„ç§æœ‰åè®®çš„å®¢æˆ·ç«¯ç±»å‹
 typedef enum {
 	UNKNOWN_CLIENT = 0,
 	HTTP_CLIENT,
@@ -24,7 +24,7 @@ typedef enum {
 } CLIENT_TYPE;
 
 
-// 2¡¢ÒªÖ§³ÖµÄË½ÓĞĞ­ÒéµÄÍ·ÎÄ¼ş¡£
+// 2ã€è¦æ”¯æŒçš„ç§æœ‰åè®®çš„å¤´æ–‡ä»¶ã€‚
 // protocol public file
 #include "cmd_proto.h"
 bool parse_command_recved_data(void * __client);

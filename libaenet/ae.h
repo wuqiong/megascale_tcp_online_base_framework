@@ -1,13 +1,37 @@
-/* A simple event-driven programming library. 
- * Originally I wrote this code for the Jim's event-loop 
- * (Jim is a Tcl interpreter) but later translated it in form of a library for easy reuse.
+/* A simple event-driven programming library. Originally I wrote this code
+ * for the Jim's event-loop (Jim is a Tcl interpreter) but later translated
+ * it in form of a library for easy reuse.
  *
+ * Copyright (c) 2006-2012, Salvatore Sanfilippo <antirez at gmail dot com>
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of Redis nor the names of its contributors may be used
+ *     to endorse or promote products derived from this software without
+ *     specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 #ifndef __AE_H__
 #define __AE_H__
-
-#include <time.h>
 
 #define AE_OK 0
 #define AE_ERR -1
@@ -22,71 +46,76 @@
 #define AE_DONT_WAIT 4
 
 #define AE_NOMORE -1
-#define AE_DELETED_EVENT_ID -1
 
-#define NOTUSED(V) ((void) V)
+/* Macros */
+#define AE_NOTUSED(V) ((void) V)
 
-struct AE_EVENT_LOOP;
+struct aeEventLoop;
 
-typedef void AeFileProc(struct AE_EVENT_LOOP * event_loop, int fd, void *client_data, int mask);
-typedef int AeTimeProc(struct AE_EVENT_LOOP * event_loop, long long id, void *client_data);
-typedef void AeEventFinalizerProc(struct AE_EVENT_LOOP * event_loop, void *client_data);
-typedef void AeBeforeSleepProc(struct AE_EVENT_LOOP * event_loop);
+/* Types and data structures */
+typedef void aeFileProc(struct aeEventLoop *eventLoop, int fd, void *clientData, int mask);
+typedef int aeTimeProc(struct aeEventLoop *eventLoop, long long id, void *clientData);
+typedef void aeEventFinalizerProc(struct aeEventLoop *eventLoop, void *clientData);
+typedef void aeBeforeSleepProc(struct aeEventLoop *eventLoop);
 
-typedef struct __tag_AeFile_Event {
-    int mask; // one of AE_(READABLE|WRITABLE) 
-    AeFileProc * rfile_proc;
-    AeFileProc * wfile_proc;
-    void * client_data;
-} AE_FILE_EVENT;
+/* File event structure */
+typedef struct aeFileEvent {
+    int mask; /* one of AE_(READABLE|WRITABLE) */
+    aeFileProc *rfileProc;
+    aeFileProc *wfileProc;
+    void *clientData;
+} aeFileEvent;
 
-typedef struct __tag_AeTimeEvent 
-{
-    long long id; 
-    long when_sec; 
-    long when_ms; 
-    AeTimeProc *time_proc;
-    AeEventFinalizerProc * finalizer_proc;
-    void *client_data;
-    struct AE_TIME_EVENT * next;
-} AE_TIME_EVENT;
+/* Time event structure */
+typedef struct aeTimeEvent {
+    long long id; /* time event identifier. */
+    long when_sec; /* seconds */
+    long when_ms; /* milliseconds */
+    aeTimeProc *timeProc;
+    aeEventFinalizerProc *finalizerProc;
+    void *clientData;
+    struct aeTimeEvent *next;
+} aeTimeEvent;
 
-
-typedef struct __tag_Ae_Fired_Event 
-{
+/* A fired event */
+typedef struct aeFiredEvent {
     int fd;
     int mask;
-} AE_FIRE_EVENT;
+} aeFiredEvent;
 
-typedef struct __tag_Event_Loop 
-{
-    int max_fd;   
-    int set_size; 
-    long long time_event_next_id;
-    time_t last_time;
-    AE_FILE_EVENT * events; 
-    AE_FIRE_EVENT * fired; 
-    AE_TIME_EVENT * time_event_head;
+/* State of an event based program */
+typedef struct aeEventLoop {
+    int maxfd;   /* highest file descriptor currently registered */
+    int setsize; /* max number of file descriptors tracked */
+    long long timeEventNextId;
+    time_t lastTime;     /* Used to detect system clock skew */
+    aeFileEvent *events; /* Registered events */
+    aeFiredEvent *fired; /* Fired events */
+    aeTimeEvent *timeEventHead;
     int stop;
-    void * api_data; 
-    AeBeforeSleepProc * before_sleep;
-} AE_EVENT_LOOP;
+    void *apidata; /* This is used for polling API specific data */
+    aeBeforeSleepProc *beforesleep;
+} aeEventLoop;
 
-int ae_wait(int fd, int mask, long long milliseconds);
-void ae_main(AE_EVENT_LOOP * event_loop);
-void ae_stop(AE_EVENT_LOOP * event_loop);
-char * ae_get_api_name(void);
+/* Prototypes */
+aeEventLoop *aeCreateEventLoop(int setsize);
+void aeDeleteEventLoop(aeEventLoop *eventLoop);
+void aeStop(aeEventLoop *eventLoop);
+int aeCreateFileEvent(aeEventLoop *eventLoop, int fd, int mask,
+        aeFileProc *proc, void *clientData);
+void aeDeleteFileEvent(aeEventLoop *eventLoop, int fd, int mask);
+int aeGetFileEvents(aeEventLoop *eventLoop, int fd);
+long long aeCreateTimeEvent(aeEventLoop *eventLoop, long long milliseconds,
+        aeTimeProc *proc, void *clientData,
+        aeEventFinalizerProc *finalizerProc);
+int aeDeleteTimeEvent(aeEventLoop *eventLoop, long long id);
+int aeProcessEvents(aeEventLoop *eventLoop, int flags);
+int aeWait(int fd, int mask, long long milliseconds);
+void aeMain(aeEventLoop *eventLoop);
+char *aeGetApiName(void);
+void aeSetBeforeSleepProc(aeEventLoop *eventLoop, aeBeforeSleepProc *beforesleep);
+int aeGetSetSize(aeEventLoop *eventLoop);
+int aeResizeSetSize(aeEventLoop *eventLoop, int setsize);
 
-AE_EVENT_LOOP * ae_create_event_loop(int set_size);
-void ae_delete_event_loop(AE_EVENT_LOOP * event_loop);
-int ae_create_file_event(AE_EVENT_LOOP * event_loop, int fd, int mask, AeFileProc *proc, void *client_data);
-void ae_delete_file_event(AE_EVENT_LOOP * event_loop, int fd, int mask);
-int ae_get_file_events(AE_EVENT_LOOP * event_loop, int fd);
-long long ae_create_time_event(AE_EVENT_LOOP * event_loop, long long milliseconds, AeTimeProc *proc, void *client_data, AeEventFinalizerProc *finalizer_proc);
-int ae_delete_time_event(AE_EVENT_LOOP * event_loop, long long id);
-int ae_process_events(AE_EVENT_LOOP * event_loop, int flags);
-void ae_set_before_sleep_proc(AE_EVENT_LOOP * event_loop, AeBeforeSleepProc * before_sleep);
-int ae_get_set_size(AE_EVENT_LOOP * event_loop);
-int ae_resize_set_size(AE_EVENT_LOOP * event_loop, int set_size);
 
 #endif
